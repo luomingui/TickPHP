@@ -22,14 +22,15 @@
 +   视图（Views）部署结构为控制器名/行为名，如：item/view.php，car/buy.php。
 +   项目文件夹需用小驼峰命名法
 
-### 模块化设计 模块/控制器/方法/操作 如：http://localhost/index.php?m=admin&c=news&a=Index
+### 模块化设计 模块/控制器/方法/参数
+如：域名/home/index/get?id=1
 +   后台
 +   前台
 +   手机
 +   API
 +   ....
 
-## 安全性 https://www.cnblogs.com/luyucheng/p/6234524.html
+## 安全性 
 
 框架在系统层面提供了众多的安全特性，确保你的网站和产品安全无忧。这些特性包括：
 
