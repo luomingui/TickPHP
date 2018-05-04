@@ -1,6 +1,4 @@
 ![](https://files.cnblogs.com/files/luomingui/ticky-logo.gif)
-
-TickyPHP
 ===============
 [![Total Downloads](https://poser.pugx.org/topticky/framework/downloads)](https://packagist.org/packages/topticky/framework)
 [![Latest Stable Version](https://poser.pugx.org/topticky/framework/v/stable)](https://packagist.org/packages/topticky/framework)
