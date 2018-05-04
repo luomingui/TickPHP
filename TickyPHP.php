@@ -75,7 +75,7 @@ if (!file_exists(TICKY_PATH . 'Convention' . EXT)) {
     exit(TICKY_PATH . 'Convention' . EXT);
 }
 // 加载惯例配置文件
-\ticky\Config::set(include TICKY_PATH . 'Convention' . EXT);
+\ticky\Config::set(include TICKY_PATH . 'convention' . EXT);
 
 // 加载核心Ticky类
 \ticky\App::run();
