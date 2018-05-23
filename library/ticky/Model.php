@@ -33,7 +33,7 @@ class Model extends Object {
     protected $methods = array('strict', 'order', 'alias', 'having', 'group', 'lock', 'distinct', 'auto', 'filter', 'validate', 'result', 'token', 'index', 'force');
     protected $class; // 当前类名称
     private static $event = [];  // 回调事件
-
+    protected $error;
     /**
      * 初始化过的模型.
      *
