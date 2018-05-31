@@ -21,7 +21,7 @@ class File extends Driver {
 
     protected $options = [
         'expire' => 0,
-        'cache_subdir' => true,
+        'cache_subdir' => false,
         'prefix' => '',
         'path' => CACHE_PATH,
         'data_compress' => false,
@@ -63,7 +63,7 @@ class File extends Driver {
      * @return string
      */
     protected function getCacheKey($name) {
-        $name = md5($name);
+        //$name = md5($name);
         if ($this->options['cache_subdir']) {
             // 使用子目录
             $name = substr($name, 0, 2) . DS . substr($name, 2);
@@ -71,7 +71,7 @@ class File extends Driver {
         if ($this->options['prefix']) {
             $name = $this->options['prefix'] . DS . $name;
         }
-        $filename = $this->options['path'] . $name . '.php';
+        $filename = $this->options['path'] . strtolower($name) . '.php';
         $dir = dirname($filename);
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);

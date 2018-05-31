@@ -24,7 +24,15 @@ use ticky\Loader;
 use ticky\Session;
 use ticky\Crypt;
 use ticky\Lang;
+use ticky\Log;
 
+if (!function_exists('runlog')) {
+
+    function runlog($message, $type = 'INFO') {
+        Log::write($message, $type);
+    }
+
+}
 if (!function_exists('config')) {
 
     /**
@@ -675,28 +683,19 @@ function delhtml($str) {  //清除html标签
  * HTML标签自动补全代码
  */
 function closetags($html) {
-// 不需要补全的标签
     $arr_single_tags = array('meta', 'img', 'br', 'link', 'area');
-// 匹配开始标签
     preg_match_all('#<([a-z]+)(?: .*)?(?<![/|/ ])>#iU', $html, $result);
     $openedtags = $result[1];
-// 匹配关闭标签
     preg_match_all('#</([a-z]+)>#iU', $html, $result);
     $closedtags = $result[1];
-// 计算关闭开启标签数量，如果相同就返回html数据
     $len_opened = count($openedtags);
     if (count($closedtags) == $len_opened) {
         return $html;
     }
-// 把排序数组，将最后一个开启的标签放在最前面
     $openedtags = array_reverse($openedtags);
-// 遍历开启标签数组
     for ($i = 0; $i < $len_opened; $i++) {
-// 如果需要补全的标签
         if (!in_array($openedtags[$i], $arr_single_tags)) {
-// 如果这个标签不在关闭的标签中
             if (!in_array($openedtags[$i], $closedtags)) {
-// 直接补全闭合标签
                 $html .= '</' . $openedtags[$i] . '>';
             } else {
                 unset($closedtags[array_search($openedtags[$i], $closedtags)]);
@@ -710,14 +709,121 @@ function strexists($string, $find) {
     return !(strpos($string, $find) === FALSE);
 }
 
+/**
+ * 检测是否是手机访问
+ */
+function is_mobile() {
+    $useragent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+    $useragent_commentsblock = preg_match('|\(.*?\)|', $useragent, $matches) > 0 ? $matches[0] : '';
+
+    function _is_mobile($substrs, $text) {
+        foreach ($substrs as $substr)
+            if (false !== strpos($text, $substr)) {
+                return true;
+            }
+        return false;
+    }
+
+    $mobile_os_list = array('Google Wireless Transcoder', 'Windows CE', 'WindowsCE', 'Symbian', 'Android', 'armv6l', 'armv5', 'Mobile', 'CentOS', 'mowser', 'AvantGo', 'Opera Mobi', 'J2ME/MIDP', 'Smartphone', 'Go.Web', 'Palm', 'iPAQ');
+    $mobile_token_list = array('Profile/MIDP', 'Configuration/CLDC-', '160×160', '176×220', '240×240', '240×320', '320×240', 'UP.Browser', 'UP.Link', 'SymbianOS', 'PalmOS', 'PocketPC', 'SonyEricsson', 'Nokia', 'BlackBerry', 'Vodafone', 'BenQ', 'Novarra-Vision', 'Iris', 'NetFront', 'HTC_', 'Xda_', 'SAMSUNG-SGH', 'Wapaka', 'DoCoMo', 'iPhone', 'iPod');
+
+    $found_mobile = _is_mobile($mobile_os_list, $useragent_commentsblock) ||
+            _is_mobile($mobile_token_list, $useragent);
+    if ($found_mobile) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * 计算星座的函数 string get_zodiac_sign(string month, string day)
+ * 输入：月份，日期
+ * 输出：星座名称或者错误信息
+ */
+function get_zodiac_sign($month, $day) {
+    // 检查参数有效性
+    if ($month < 1 || $month > 12 || $day < 1 || $day > 31) {
+        return (false);
+    }
+    // 星座名称以及开始日期
+    $signs = array(
+        array("20" => "水瓶座"),
+        array("19" => "双鱼座"),
+        array("21" => "白羊座"),
+        array("20" => "金牛座"),
+        array("21" => "双子座"),
+        array("22" => "巨蟹座"),
+        array("23" => "狮子座"),
+        array("23" => "处女座"),
+        array("23" => "天秤座"),
+        array("24" => "天蝎座"),
+        array("22" => "射手座"),
+        array("22" => "摩羯座")
+    );
+    list($sign_start, $sign_name) = each($signs[(int) $month - 1]);
+    if ($day < $sign_start) {
+        list($sign_start, $sign_name) = each($signs[($month - 2 < 0) ? $month = 11 : $month -= 2]);
+    }
+    return $sign_name;
+}
+
+/**
+ * 传入时间戳,计算距离现在的时间
+ * @param  number $time 时间戳
+ * @return string     返回多少以前
+ */
+function word_time($time) {
+    $time = (int) substr($time, 0, 10);
+    $int = time() - $time;
+    $str = '';
+    if ($int <= 2) {
+        $str = sprintf('刚刚', $int);
+    } elseif ($int < 60) {
+        $str = sprintf('%d秒前', $int);
+    } elseif ($int < 3600) {
+        $str = sprintf('%d分钟前', floor($int / 60));
+    } elseif ($int < 86400) {
+        $str = sprintf('%d小时前', floor($int / 3600));
+    } elseif ($int < 1728000) {
+        $str = sprintf('%d天前', floor($int / 86400));
+    } else {
+        $str = date('Y-m-d H:i:s', $time);
+    }
+    return $str;
+}
+
+//PHP  base_64 文件加密
+function encode_file_contents($filename) {
+    $type = strtolower(substr(strrchr($filename, '.'), 1));
+    if ('php' == $type && is_file($filename) && is_writable($filename)) { // 如果是PHP文件 并且可写 则进行压缩编码
+        $contents = file_get_contents($filename); // 判断文件是否已经被编码处理
+        $contents = php_strip_whitespace($filename);
+        // 去除PHP头部和尾部标识
+        $headerPos = strpos($contents, '<?php');
+        $footerPos = strrpos($contents, '?>');
+        $contents = substr($contents, $headerPos + 5, $footerPos - $headerPos);
+        $encode = base64_encode(gzdeflate($contents)); // 开始编码
+        $encode = '<?php' . "\n eval(gzinflate(base64_decode(" . "'" . $encode . "'" . ")));\n\n?>";
+        return file_put_contents($filename, $encode);
+    }
+    return false;
+}
+
 function debug($var = null, $vardump = false) {
-    echo '<pre>';
+    $str = '<pre style="display: block;padding: 9.5px;margin: 44px 0 0 0;font-size: 13px;line-height: 1.42857;color: #333;word-break: break-all;word-wrap: break-word;background-color: #F5F5F5;border: 1px solid #CCC;border-radius: 4px;">';
     $vardump = empty($var) ? true : $vardump;
-    if ($vardump) {
+    if (is_bool($var)) {
+        $show_data = $data ? 'true' : 'false';
+    } elseif (is_null($var)) {
+        $show_data = 'null';
+    } elseif ($vardump) {
         var_dump($var);
     } else {
-        print_r($var);
+        $show_data = print_r($var, true);
     }
-    echo '</pre>';
+    $str .= $show_data;
+    $str .= '</pre>';
+    echo $str;
     exit();
 }
